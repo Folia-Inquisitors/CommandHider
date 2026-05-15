@@ -2,11 +2,7 @@
 
 CommandHider controls which commands players can see, tab-complete, and execute on Paper/Folia servers.
 
-## Folia
-
-This build targets Folia API `1.21.11-R0.1-SNAPSHOT` and declares `folia-supported: true`.
-
-CommandHider also supports its native config shape:
+CommandHider config:
 
 ```yml
 messages:
