@@ -1,49 +1,48 @@
-# CommandWhitelist
+# CommandHider
 
-Website: None
+CommandHider controls which commands players can see, tab-complete, and execute on Paper/Folia servers.
 
-# Official Discord 
+## Folia
 
-https://discord.gg/aT9z7q7hX8
+This build targets Folia API `1.21.11-R0.1-SNAPSHOT` and declares `folia-supported: true`.
 
-## Building instructions
+## Replacing CommandWhitelist
 
-./gradlew build
- 
-## Description
+To replace CommandWhitelist, remove the old CommandWhitelist jar and install the CommandHider jar. On first start, CommandHider will copy `plugins/CommandWhitelist/config.yml` into `plugins/CommandHider/config.yml` if the new config does not exist yet.
 
-This plugin will hide all the commands listed in the group. Hide-All whitelist, Add-All blacklist, assign each group listed here to it's respective luckperms role.
+CommandWhitelist-style config keys are accepted:
 
-
-## Default Config
-
-```
+```yml
 unknown-cmd-msg: Unknown command. Type "/help" for help.
 groups:
   default:
     hide-all:
-    - tpa
-    - msg
+      - msg
     add-all:
-    - tpa
-  admin:
-    hide-all:
-    - plugins
-    - vanish
-
+      - plugins
 ```
 
-## Luckperms permissions.
+CommandHider also supports its native config shape:
 
+```yml
+messages:
+  no-permission: '&cUnknown command. Use /help for list of commands.'
+command-groups:
+  default:
+    whitelist:
+      - msg
+    blacklist:
+      - plugins
 ```
 
-commandWhitelist. ( group name )
-commandwhitelist.cwreload
-commandwhitelist.bypass
+Legacy permissions are accepted alongside CommandHider permissions:
 
-```
-### Folia inquisitors
+- `commandwhitelist.bypass`
+- `commandwhitelist.cwreload`
+- `commandwhitelist.<group>`
 
-[<img src="https://github.com/Folia-Inquisitors.png" width=80 alt="Folia-Inquisitors">](https://github.com/orgs/Folia-Inquisitors/repositories)
-[<img src="https://github.com/leon0017.png" width=80 alt="C">](https://github.com/leon0017
-)
+Native permissions:
+
+- `commandhider.bypass`
+- `commandhider.reload`
+- `commandhider.<group>`

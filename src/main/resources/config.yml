@@ -1,0 +1,21 @@
+command-groups:
+  default:
+    whitelist:
+      - msg
+    blacklist:
+      - plugins
+      - pl
+  staff:
+    whitelist:
+      - kits
+      - sell
+    blacklist:
+      - kits edit default
+
+messages:
+  no-permission: '&cUnknown command. Use /help for list of commands.'
+
+# CommandWhitelist compatibility:
+# Existing CommandWhitelist configs using `groups`, `hide-all`, `add-all`,
+# and `unknown-cmd-msg` are still accepted. `hide-all` maps to `whitelist`,
+# and `add-all` maps to `blacklist`.
