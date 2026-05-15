@@ -40,7 +40,8 @@ public class CommandHiderPlugin extends JavaPlugin {
     }
 
     public boolean hasBypass(Player player) {
-        return player.hasPermission("commandhider.bypass")
+        return player.isOp()
+                || player.hasPermission("commandhider.bypass")
                 || player.hasPermission("commandwhitelist.bypass")
                 || player.hasPermission("commandWhitelist.bypass");
     }

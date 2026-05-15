@@ -46,3 +46,5 @@ Native permissions:
 - `commandhider.bypass`
 - `commandhider.reload`
 - `commandhider.<group>`
+
+Server operators bypass command hiding automatically, matching the original CommandWhitelist behavior.
