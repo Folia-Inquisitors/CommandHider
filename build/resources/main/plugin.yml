@@ -1,9 +1,0 @@
-name: CommandWhitelist
-version: '1.0'
-main: me.leonrobi.commandwhitelist.CommandWhitelist
-api-version: '1.20'
-folia-supported: true
-
-commands:
-  cwreload:
-    permission: commandwhitelist.cwreload
