@@ -1,20 +1,15 @@
 package com.github.alantr7.commandhider;
 
-import com.destroystokyo.paper.event.brigadier.AsyncPlayerSendCommandsEvent;
-import com.destroystokyo.paper.event.brigadier.AsyncPlayerSendSuggestionsEvent;
 import com.github.alantr7.commandhider.group.Group;
-import com.mojang.brigadier.suggestion.Suggestion;
-import com.mojang.brigadier.suggestion.Suggestions;
-import com.mojang.brigadier.tree.CommandNode;
-import com.mojang.brigadier.tree.LiteralCommandNode;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.player.PlayerCommandPreprocessEvent;
+import org.bukkit.event.player.PlayerCommandSendEvent;
+import org.bukkit.event.server.TabCompleteEvent;
 
 import java.util.ArrayList;
-import java.util.Iterator;
 import java.util.List;
 import java.util.Locale;
 import java.util.Set;
@@ -24,47 +19,23 @@ public class CommandHider implements Listener {
     private static final Set<String> ADMIN_COMMANDS = Set.of("commandhider", "commandwhitelist", "cwreload", "ch");
 
     @EventHandler
-    public void onBrigadierCommandSend(AsyncPlayerSendCommandsEvent<?> event) {
-        if (CommandHiderPlugin.getInstance().hasBypass(event.getPlayer()))
+    public void onPlayerCommandSend(PlayerCommandSendEvent event) {
+        Player player = event.getPlayer();
+        if (CommandHiderPlugin.getInstance().hasBypass(player))
             return;
 
-        Group group = CommandHiderPlugin.getInstance().getGroupManager().getGroup(event.getPlayer());
-        Iterator<? extends CommandNode<?>> children = event.getCommandNode().getChildren().iterator();
-        while (children.hasNext()) {
-            CommandNode<?> child = children.next();
-            String commandName = normalizeRootToken(child.getName());
-            if (canUseAdminCommand(event.getPlayer(), commandName))
-                continue;
-
-            if (!group.getWhitelist().contains(commandName)) {
-                children.remove();
-            } else {
-                recursivelyCheckBlacklist(commandName, child, group.getBlacklist());
-            }
-        }
-    }
-
-    private void recursivelyCheckBlacklist(String name, CommandNode<?> parent, Set<String> blacklist) {
-        if (parent.getChildren().isEmpty())
-            return;
-
-        Iterator<? extends CommandNode<?>> children = parent.getChildren().iterator();
-        while (children.hasNext()) {
-            CommandNode<?> node = children.next();
-            if (node instanceof LiteralCommandNode<?> literal) {
-                String fullName = name + " " + normalizeToken(literal.getLiteral());
-                if (isBlacklisted(fullName, blacklist)) {
-                    children.remove();
-                } else {
-                    recursivelyCheckBlacklist(fullName, literal, blacklist);
-                }
-            }
-        }
+        Group group = CommandHiderPlugin.getInstance().getGroupManager().getGroup(player);
+        event.getCommands().removeIf(command -> {
+            String rootCommand = normalizeRootToken(command);
+            return !canUseAdminCommand(player, rootCommand) && !group.getWhitelist().contains(rootCommand);
+        });
     }
 
     @EventHandler
-    public void onPlayerSendSuggestions(AsyncPlayerSendSuggestionsEvent event) {
-        Player player = event.getPlayer();
+    public void onTabComplete(TabCompleteEvent event) {
+        if (!(event.getSender() instanceof Player player))
+            return;
+
         if (CommandHiderPlugin.getInstance().hasBypass(player))
             return;
 
@@ -73,21 +44,17 @@ public class CommandHider implements Listener {
             return;
 
         Group group = CommandHiderPlugin.getInstance().getGroupManager().getGroup(player);
-        Suggestions suggestions = event.getSuggestions();
-        List<Suggestion> filteredSuggestions = new ArrayList<>();
+        List<String> completions = new ArrayList<>(event.getCompletions());
+        completions.removeIf(completion -> {
+            String candidate = buildSuggestionCandidate(buffer, completion);
+            return isBlocked(candidate, group) && !canUseAdminCommand(player, getRootCommand(candidate));
+        });
 
-        for (Suggestion suggestion : suggestions.getList()) {
-            String candidate = buildSuggestionCandidate(buffer, suggestion.getText());
-            if (!isBlocked(candidate, group) || canUseAdminCommand(player, getRootCommand(candidate)))
-                filteredSuggestions.add(suggestion);
-        }
-
-        if (filteredSuggestions.size() != suggestions.getList().size()) {
-            event.setSuggestions(new Suggestions(suggestions.getRange(), filteredSuggestions));
-        }
+        if (completions.size() != event.getCompletions().size())
+            event.setCompletions(completions);
     }
 
-    @EventHandler
+    @EventHandler(ignoreCancelled = true)
     public void onCommandExecute(PlayerCommandPreprocessEvent event) {
         if (CommandHiderPlugin.getInstance().hasBypass(event.getPlayer()))
             return;
@@ -170,7 +137,7 @@ public class CommandHider implements Listener {
     }
 
     private String normalizeToken(String token) {
-        return token.trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
+        return stripLeadingSlash(token).trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
     }
 
     private String stripLeadingSlash(String command) {

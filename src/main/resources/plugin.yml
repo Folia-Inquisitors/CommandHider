@@ -1,9 +1,9 @@
 name: CommandHider
 main: com.github.alantr7.commandhider.CommandHiderPlugin
-version: 1.0.0
+version: 1.0.3
 description: Manages command permissions and their visibility
 folia-supported: true
-api-version: '1.21.11'
+api-version: '1.21'
 provides:
   - CommandWhitelist
 softdepend:
@@ -22,10 +22,10 @@ commands:
 permissions:
   commandhider.bypass:
     default: false
-    description: Allows players to bypass command restrictions
+    description: Legacy permission retained for compatibility; OP status controls bypass
   commandwhitelist.bypass:
     default: false
-    description: Legacy CommandWhitelist bypass permission
+    description: Legacy permission retained for compatibility; OP status controls bypass
   commandhider.reload:
     default: op
     description: Allows reloading CommandHider
