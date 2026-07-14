@@ -1,6 +1,6 @@
 name: CommandHider
 main: com.github.alantr7.commandhider.CommandHiderPlugin
-version: 1.0.3
+version: 1.0.4
 description: Manages command permissions and their visibility
 folia-supported: true
 api-version: '1.21'

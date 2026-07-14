@@ -26,6 +26,9 @@ public class CommandHider implements Listener {
 
         Group group = CommandHiderPlugin.getInstance().getGroupManager().getGroup(player);
         event.getCommands().removeIf(command -> {
+            if (hasNamespace(getRootCommand(normalizeToken(command))))
+                return true;
+
             String rootCommand = normalizeRootToken(command);
             return !canUseAdminCommand(player, rootCommand) && !group.getWhitelist().contains(rootCommand);
         });
@@ -46,7 +49,11 @@ public class CommandHider implements Listener {
         Group group = CommandHiderPlugin.getInstance().getGroupManager().getGroup(player);
         List<String> completions = new ArrayList<>(event.getCompletions());
         completions.removeIf(completion -> {
-            String candidate = buildSuggestionCandidate(buffer, completion);
+            String rawCandidate = buildRawSuggestionCandidate(buffer, completion);
+            if (hasNamespace(getRootCommand(rawCandidate)))
+                return true;
+
+            String candidate = normalizeCommand(rawCandidate);
             return isBlocked(candidate, group) && !canUseAdminCommand(player, getRootCommand(candidate));
         });
 
@@ -59,34 +66,45 @@ public class CommandHider implements Listener {
         if (CommandHiderPlugin.getInstance().hasBypass(event.getPlayer()))
             return;
 
+        String rawCommand = normalizeRawCommand(event.getMessage());
+        if (hasNamespace(getRootCommand(rawCommand))) {
+            event.setCancelled(true);
+            sendNoPermissionMessage(event.getPlayer());
+            return;
+        }
+
         Group group = CommandHiderPlugin.getInstance().getGroupManager().getGroup(event.getPlayer());
-        String command = normalizeCommand(event.getMessage());
+        String command = normalizeCommand(rawCommand);
         if (canUseAdminCommand(event.getPlayer(), getRootCommand(command)))
             return;
 
         if (isBlocked(command, group)) {
             event.setCancelled(true);
-            event.getPlayer().sendMessage(ChatColor.translateAlternateColorCodes(
-                    '&',
-                    CommandHiderPlugin.getInstance().getNoPermissionMessage()
-            ));
+            sendNoPermissionMessage(event.getPlayer());
         }
     }
 
-    private String buildSuggestionCandidate(String buffer, String suggestion) {
+    private void sendNoPermissionMessage(Player player) {
+        player.sendMessage(ChatColor.translateAlternateColorCodes(
+                '&',
+                CommandHiderPlugin.getInstance().getNoPermissionMessage()
+        ));
+    }
+
+    private String buildRawSuggestionCandidate(String buffer, String suggestion) {
         String command = stripLeadingSlash(buffer);
         String suggestionText = stripLeadingSlash(suggestion);
 
         if (command.endsWith(" ")) {
-            return normalizeCommand(command + suggestionText);
+            return normalizeRawCommand(command + suggestionText);
         }
 
         int lastSpace = command.lastIndexOf(' ');
         if (lastSpace < 0) {
-            return normalizeCommand(suggestionText);
+            return normalizeRawCommand(suggestionText);
         }
 
-        return normalizeCommand(command.substring(0, lastSpace + 1) + suggestionText);
+        return normalizeRawCommand(command.substring(0, lastSpace + 1) + suggestionText);
     }
 
     private boolean isBlocked(String command, Group group) {
@@ -123,13 +141,17 @@ public class CommandHider implements Listener {
     }
 
     private String normalizeCommand(String commandLine) {
-        String command = stripLeadingSlash(commandLine).trim().toLowerCase(Locale.ROOT);
+        String command = normalizeRawCommand(commandLine);
         if (command.isEmpty())
             return "";
 
         String[] parts = command.split("\\s+");
         parts[0] = stripNamespace(parts[0]);
         return String.join(" ", parts);
+    }
+
+    private String normalizeRawCommand(String commandLine) {
+        return stripLeadingSlash(commandLine).trim().toLowerCase(Locale.ROOT).replaceAll("\\s+", " ");
     }
 
     private String normalizeRootToken(String token) {
@@ -152,6 +174,10 @@ public class CommandHider implements Listener {
         if (namespaceSeparator < 0 || namespaceSeparator + 1 >= command.length())
             return command;
         return command.substring(namespaceSeparator + 1);
+    }
+
+    private boolean hasNamespace(String command) {
+        return command.indexOf(':') >= 0;
     }
 
 }
