@@ -18,9 +18,11 @@ command-groups:
 
 ## Permissions:
 
+```
 - `commandhider.bypass`
 - `commandhider.reload`
 - `commandhider.<group>`
+```
 
 ### Folia inquisitors
 
