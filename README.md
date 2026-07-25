@@ -1,6 +1,6 @@
-# CommandHider
-
-CommandHider controls which commands players can see, tab-complete, and execute on Paper/Folia servers.
+# CommandHider 
+## Description
+A plugin that controls which commands players can, and cannot see. Supports both Whitelist, blacklist and different permission groups. 
 
 CommandHider config:
 
