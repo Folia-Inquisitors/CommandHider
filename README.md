@@ -2,7 +2,7 @@
 ## Description
 A plugin that controls which commands players can, and cannot see. Supports both Whitelist, blacklist and different permission groups. 
 
-CommandHider config:
+## CommandHider config:
 
 ```yml
 messages:
@@ -16,7 +16,7 @@ command-groups:
 ```
 
 
-Native permissions:
+## permissions:
 
 - `commandhider.bypass`
 - `commandhider.reload`
