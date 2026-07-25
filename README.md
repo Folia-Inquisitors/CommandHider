@@ -16,8 +16,12 @@ command-groups:
 ```
 
 
-## permissions:
+## Permissions:
 
 - `commandhider.bypass`
 - `commandhider.reload`
 - `commandhider.<group>`
+
+### Folia inquisitors
+
+[<img src="https://github.com/Folia-Inquisitors.png" width=80 alt="Folia-Inquisitors">](https://github.com/orgs/Folia-Inquisitors/repositories)
