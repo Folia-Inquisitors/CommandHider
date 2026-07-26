@@ -27,3 +27,5 @@ command-groups:
 ### Folia inquisitors
 
 [<img src="https://github.com/Folia-Inquisitors.png" width=80 alt="Folia-Inquisitors">](https://github.com/orgs/Folia-Inquisitors/repositories)
+
+[<img src="https://github.com/leon0017png" width=80 alt="leon0017">](https://github.com/leon0017))
