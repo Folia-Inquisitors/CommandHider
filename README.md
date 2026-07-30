@@ -1,6 +1,6 @@
 # CommandHider 
 ## Description
-A plugin that controls which commands players can, and cannot see. Supports both Whitelist, blacklist and different permission groups. 
+A plugin that controls which commands players can, and cannot see. Supports both Whitelist, blacklist, command Regex support and different permission groups. 
 
 ## CommandHider config:
 
