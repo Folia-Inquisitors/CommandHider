@@ -1,16 +1,14 @@
 package com.github.alantr7.commandhider.group;
 
-import java.util.Set;
-
 public class Group {
 
     private final String id;
 
-    private final Set<String> whitelist;
+    private final CommandRuleSet whitelist;
 
-    private final Set<String> blacklist;
+    private final CommandRuleSet blacklist;
 
-    public Group(String id, Set<String> whitelist, Set<String> blacklist) {
+    public Group(String id, CommandRuleSet whitelist, CommandRuleSet blacklist) {
         this.id = id;
         this.whitelist = whitelist;
         this.blacklist = blacklist;
@@ -20,11 +18,11 @@ public class Group {
         return id;
     }
 
-    public Set<String> getWhitelist() {
+    public CommandRuleSet getWhitelist() {
         return whitelist;
     }
 
-    public Set<String> getBlacklist() {
+    public CommandRuleSet getBlacklist() {
         return blacklist;
     }
 

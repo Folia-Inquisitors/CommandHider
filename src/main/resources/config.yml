@@ -5,6 +5,9 @@ command-groups:
     blacklist:
       - plugins
       - pl
+      # Plain rules are automatically converted into case-insensitive regexes.
+      # Prefix a rule with regex: only when you need a custom pattern.
+      # Example: regex:(shop|sell|tpa)( .*)?
   staff:
     whitelist:
       - kits

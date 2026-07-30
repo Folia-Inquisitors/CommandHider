@@ -6,7 +6,7 @@
 
     <groupId>com.github.alantr7</groupId>
     <artifactId>CommandHider</artifactId>
-    <version>1.0.4</version>
+    <version>1.0.7</version>
 
     <properties>
         <java.version>21</java.version>
