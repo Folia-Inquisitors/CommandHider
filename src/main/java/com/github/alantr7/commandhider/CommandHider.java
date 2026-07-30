@@ -1,7 +1,10 @@
 package com.github.alantr7.commandhider;
 
 import com.github.alantr7.commandhider.group.Group;
+import com.github.alantr7.commandhider.group.CommandRuleSet;
+import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
+import org.bukkit.command.Command;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -10,8 +13,10 @@ import org.bukkit.event.player.PlayerCommandSendEvent;
 import org.bukkit.event.server.TabCompleteEvent;
 
 import java.util.ArrayList;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 import java.util.Set;
 
 public class CommandHider implements Listener {
@@ -30,7 +35,7 @@ public class CommandHider implements Listener {
                 return true;
 
             String rootCommand = normalizeRootToken(command);
-            return !canUseAdminCommand(player, rootCommand) && !group.getWhitelist().contains(rootCommand);
+            return !canUseAdminCommand(player, rootCommand) && !group.getWhitelist().matches(rootCommand);
         });
     }
 
@@ -57,7 +62,9 @@ public class CommandHider implements Listener {
             return isBlocked(candidate, group) && !canUseAdminCommand(player, getRootCommand(candidate));
         });
 
-        if (completions.size() != event.getCompletions().size())
+        addAllowedRootCompletions(buffer, player, group, completions);
+
+        if (!sameCompletions(completions, event.getCompletions()))
             event.setCompletions(completions);
     }
 
@@ -91,6 +98,37 @@ public class CommandHider implements Listener {
         ));
     }
 
+    private void addAllowedRootCompletions(String buffer, Player player, Group group, List<String> completions) {
+        String command = stripLeadingSlash(buffer);
+        if (command.indexOf(' ') >= 0)
+            return;
+
+        String typedRoot = normalizeRootToken(command);
+        Set<String> seen = new LinkedHashSet<>();
+        for (String completion : completions) {
+            seen.add(normalizeRootToken(completion));
+        }
+
+        for (Map.Entry<String, Command> entry : Bukkit.getCommandMap().getKnownCommands().entrySet()) {
+            String label = normalizeToken(entry.getKey());
+            if (label.isEmpty() || hasNamespace(label))
+                continue;
+
+            if (!label.startsWith(typedRoot) || seen.contains(label))
+                continue;
+
+            if (!canUseAdminCommand(player, label) && isBlocked(label, group))
+                continue;
+
+            completions.add(label);
+            seen.add(label);
+        }
+    }
+
+    private boolean sameCompletions(List<String> first, List<String> second) {
+        return first.size() == second.size() && first.equals(second);
+    }
+
     private String buildRawSuggestionCandidate(String buffer, String suggestion) {
         String command = stripLeadingSlash(buffer);
         String suggestionText = stripLeadingSlash(suggestion);
@@ -112,14 +150,14 @@ public class CommandHider implements Listener {
             return false;
 
         String root = getRootCommand(command);
-        return !group.getWhitelist().contains(root) || isBlacklisted(command, group.getBlacklist());
+        return !group.getWhitelist().matches(root) || isBlacklisted(command, group.getBlacklist());
     }
 
     private boolean canUseAdminCommand(Player player, String command) {
         return ADMIN_COMMANDS.contains(command) && CommandHiderPlugin.getInstance().hasReloadPermission(player);
     }
 
-    private boolean isBlacklisted(String command, Set<String> blacklist) {
+    private boolean isBlacklisted(String command, CommandRuleSet blacklist) {
         String[] parts = command.split("\\s+");
         StringBuilder commandPart = new StringBuilder();
         for (String part : parts) {
@@ -127,7 +165,7 @@ public class CommandHider implements Listener {
                 commandPart.append(' ');
 
             commandPart.append(part);
-            if (blacklist.contains(commandPart.toString()))
+            if (blacklist.matches(commandPart.toString()))
                 return true;
         }
         return false;

@@ -9,15 +9,13 @@ import org.bukkit.permissions.Permission;
 import org.bukkit.permissions.PermissionDefault;
 
 import java.util.LinkedHashMap;
-import java.util.LinkedHashSet;
 import java.util.Map;
-import java.util.Set;
 import java.util.Locale;
-import java.util.stream.Collectors;
+import java.util.regex.PatternSyntaxException;
 
 public class GroupManager {
 
-    private static final Group EMPTY_DEFAULT_GROUP = new Group("default", Set.of(), Set.of());
+    private static final Group EMPTY_DEFAULT_GROUP = new Group("default", new CommandRuleSet(), new CommandRuleSet());
 
     private final Map<String, Group> groups = new LinkedHashMap<>();
 
@@ -59,18 +57,30 @@ public class GroupManager {
         return groups.getOrDefault("default", EMPTY_DEFAULT_GROUP);
     }
 
-    private Set<String> readCommandSet(ConfigurationSection groupSection, String primaryKey, String legacyKey) {
-        Set<String> commands = new LinkedHashSet<>();
-        commands.addAll(readCommandSet(groupSection, primaryKey));
-        commands.addAll(readCommandSet(groupSection, legacyKey));
+    private CommandRuleSet readCommandSet(ConfigurationSection groupSection, String primaryKey, String legacyKey) {
+        CommandRuleSet commands = new CommandRuleSet();
+        readCommandSet(groupSection, primaryKey, commands);
+        readCommandSet(groupSection, legacyKey, commands);
         return commands;
     }
 
-    private Set<String> readCommandSet(ConfigurationSection groupSection, String key) {
-        return groupSection.getStringList(key).stream()
-                .map(this::normalizeCommand)
-                .filter(command -> !command.isEmpty())
-                .collect(Collectors.toCollection(LinkedHashSet::new));
+    private void readCommandSet(ConfigurationSection groupSection, String key, CommandRuleSet commands) {
+        for (String command : groupSection.getStringList(key)) {
+            if (CommandRuleSet.isRegexRule(command)) {
+                PatternSyntaxException exception = CommandRuleSet.compileError(command);
+                if (exception != null) {
+                    CommandHiderPlugin.getInstance().getLogger().warning(
+                            "Ignoring invalid regex command rule '" + command + "' in " + groupSection.getCurrentPath()
+                                    + "." + key + ": " + exception.getMessage()
+                    );
+                    continue;
+                }
+                commands.add(command);
+                continue;
+            }
+
+            commands.add(normalizeCommand(command));
+        }
     }
 
     private void registerGroupPermission(String groupId) {
